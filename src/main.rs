@@ -68,11 +68,24 @@ fn route(path: &str) -> Result<(u16, &'static str, String), String> {
     }
 
     if route == "/" {
-        let draw = match query_param(query, "period") {
-            Some(period) if !period.is_empty() => by_period(&period)?,
-            _ => latest()?,
+        let period = query_param(query, "period").unwrap_or_default();
+        let (draw, notice) = if period.trim().is_empty() {
+            (latest()?, None)
+        } else if !period.chars().all(|ch| ch.is_ascii_digit()) {
+            (
+                latest()?,
+                Some(format!("查詢期別「{}」格式不正確，請輸入數字期別。", escape_html(&period))),
+            )
+        } else {
+            match by_period(&period) {
+                Ok(draw) => (draw, None),
+                Err(_) => (
+                    latest()?,
+                    Some(format!("查無期別「{}」，已顯示最新一期。", escape_html(&period))),
+                ),
+            }
         };
-        return Ok((200, "text/html; charset=utf-8", html(&draw)));
+        return Ok((200, "text/html; charset=utf-8", html(&draw, notice.as_deref())));
     }
 
     Ok((404, "application/json; charset=utf-8", r#"{"error":"not found"}"#.to_string()))
@@ -235,13 +248,24 @@ fn json(draw: &Draw) -> String {
     )
 }
 
-fn html(draw: &Draw) -> String {
+fn escape_html(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+}
+
+fn html(draw: &Draw, notice: Option<&str>) -> String {
     let balls = draw
         .numbers
         .iter()
         .map(|number| format!(r#"<span class="ball">{number}</span>"#))
         .collect::<Vec<_>>()
         .join("");
+    let notice_html = notice
+        .map(|message| format!(r#"<p class="notice">{message}</p>"#))
+        .unwrap_or_default();
 
     format!(
         r#"<!doctype html>
@@ -256,6 +280,7 @@ main{{max-width:720px;margin:auto}}
 form{{display:flex;gap:.5rem;margin:1rem 0 1.25rem}}
 input{{flex:1;padding:.7rem .8rem;border:1px solid #d1d5db;border-radius:.35rem;font:inherit}}
 button{{padding:.7rem 1rem;border:0;border-radius:.35rem;background:#111827;color:#fff;font:inherit;font-weight:700;cursor:pointer}}
+.notice{{padding:.75rem 1rem;border-radius:.35rem;background:#fef3c7;color:#92400e}}
 .balls{{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}}
 .ball{{border-radius:999px;padding:.65rem .9rem;background:#f97316;color:#fff;font-weight:700}}
 .special{{background:#dc2626}}
@@ -268,6 +293,7 @@ button{{padding:.7rem 1rem;border:0;border-radius:.35rem;background:#111827;colo
 <input name="period" inputmode="numeric" placeholder="輸入期別，例如 115000049 或 049">
 <button type="submit">查詢</button>
 </form>
+{}
 <p>第 <strong>{}</strong> 期，開獎日期：<strong>{}</strong></p>
 <div class="balls">{}<span class="ball special">{}</span></div>
 <p>一般號碼：{}</p>
@@ -275,6 +301,7 @@ button{{padding:.7rem 1rem;border:0;border-radius:.35rem;background:#111827;colo
 </main>
 </body>
 </html>"#,
+        notice_html,
         draw.period,
         draw.date,
         balls,
