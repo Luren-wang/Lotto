@@ -70,22 +70,16 @@ fn route(path: &str) -> Result<(u16, &'static str, String), String> {
     if route == "/" {
         let period = query_param(query, "period").unwrap_or_default();
         let (draw, notice) = if period.trim().is_empty() {
-            (latest()?, None)
+            (latest().ok(), None)
         } else if !period.chars().all(|ch| ch.is_ascii_digit()) {
-            (
-                latest()?,
-                Some(format!("查詢期別「{}」格式不正確，請輸入數字期別。", escape_html(&period))),
-            )
+            (None, Some("查詢不到，請重新輸入。".to_string()))
         } else {
             match by_period(&period) {
-                Ok(draw) => (draw, None),
-                Err(_) => (
-                    latest()?,
-                    Some(format!("查無期別「{}」，已顯示最新一期。", escape_html(&period))),
-                ),
+                Ok(draw) => (Some(draw), None),
+                Err(_) => (None, Some("查詢不到，請重新輸入。".to_string())),
             }
         };
-        return Ok((200, "text/html; charset=utf-8", html(&draw, notice.as_deref())));
+        return Ok((200, "text/html; charset=utf-8", html(draw.as_ref(), notice.as_deref())));
     }
 
     Ok((404, "application/json; charset=utf-8", r#"{"error":"not found"}"#.to_string()))
@@ -248,24 +242,33 @@ fn json(draw: &Draw) -> String {
     )
 }
 
-fn escape_html(value: &str) -> String {
-    value
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-}
-
-fn html(draw: &Draw, notice: Option<&str>) -> String {
-    let balls = draw
-        .numbers
-        .iter()
-        .map(|number| format!(r#"<span class="ball">{number}</span>"#))
-        .collect::<Vec<_>>()
-        .join("");
+fn html(draw: Option<&Draw>, notice: Option<&str>) -> String {
     let notice_html = notice
         .map(|message| format!(r#"<p class="notice">{message}</p>"#))
         .unwrap_or_default();
+    let result_html = match draw {
+        Some(draw) => {
+            let balls = draw
+                .numbers
+                .iter()
+                .map(|number| format!(r#"<span class="ball">{number}</span>"#))
+                .collect::<Vec<_>>()
+                .join("");
+            format!(
+                r#"<p>第 <strong>{}</strong> 期，開獎日期：<strong>{}</strong></p>
+<div class="balls">{}<span class="ball special">{}</span></div>
+<p>一般號碼：{}</p>
+<p>特別號：{}</p>"#,
+                draw.period,
+                draw.date,
+                balls,
+                draw.special,
+                draw.numbers.join(" "),
+                draw.special
+            )
+        }
+        None => String::new(),
+    };
 
     format!(
         r#"<!doctype html>
@@ -294,19 +297,11 @@ button{{padding:.7rem 1rem;border:0;border-radius:.35rem;background:#111827;colo
 <button type="submit">查詢</button>
 </form>
 {}
-<p>第 <strong>{}</strong> 期，開獎日期：<strong>{}</strong></p>
-<div class="balls">{}<span class="ball special">{}</span></div>
-<p>一般號碼：{}</p>
-<p>特別號：{}</p>
+{}
 </main>
 </body>
 </html>"#,
         notice_html,
-        draw.period,
-        draw.date,
-        balls,
-        draw.special,
-        draw.numbers.join(" "),
-        draw.special
+        result_html
     )
 }
