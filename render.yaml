@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: lotto
+    runtime: python
+    buildCommand: python -m unittest discover -s tests
+    startCommand: python app.py
+    healthCheckPath: /health
