@@ -140,7 +140,7 @@ button{{padding:.7rem 1rem;border:0;border-radius:.35rem;background:#111827;colo
 {notice_html}
 {result_html}
 <div class="submission">
-<strong>姓名：</strong>{escape(STUDENT_NAME)}
+<strong></strong>{escape(STUDENT_NAME)}
 </div>
 </main>
 </body>
