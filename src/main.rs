@@ -253,21 +253,25 @@ fn html(draw: &Draw) -> String {
 <style>
 body{{font-family:system-ui,sans-serif;margin:2rem;line-height:1.6}}
 main{{max-width:720px;margin:auto}}
+form{{display:flex;gap:.5rem;margin:1rem 0 1.25rem}}
+input{{flex:1;padding:.7rem .8rem;border:1px solid #d1d5db;border-radius:.35rem;font:inherit}}
+button{{padding:.7rem 1rem;border:0;border-radius:.35rem;background:#111827;color:#fff;font:inherit;font-weight:700;cursor:pointer}}
 .balls{{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}}
 .ball{{border-radius:999px;padding:.65rem .9rem;background:#f97316;color:#fff;font-weight:700}}
 .special{{background:#dc2626}}
-code{{background:#f3f4f6;padding:.15rem .3rem;border-radius:.25rem}}
 </style>
 </head>
 <body>
 <main>
 <h1>大樂透開獎號碼</h1>
+<form method="get" action="/">
+<input name="period" inputmode="numeric" placeholder="輸入期別，例如 115000049 或 049">
+<button type="submit">查詢</button>
+</form>
 <p>第 <strong>{}</strong> 期，開獎日期：<strong>{}</strong></p>
 <div class="balls">{}<span class="ball special">{}</span></div>
 <p>一般號碼：{}</p>
 <p>特別號：{}</p>
-<p>指定期別：<code>/?period=115000049</code> 或 <code>/?period=049</code></p>
-<p>JSON API：<code>/api/latest</code>、<code>/api/period?period=115000049</code></p>
 </main>
 </body>
 </html>"#,
