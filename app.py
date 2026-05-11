@@ -11,7 +11,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
 SOURCE_URL = "https://lotto.hawo.tw/lotto/recent-50"
-STUDENT_NAME = ""
+STUDENT_NAME = "B3201967 王仁為"
 
 
 @dataclass(frozen=True)
@@ -140,7 +140,7 @@ button{{padding:.7rem 1rem;border:0;border-radius:.35rem;background:#111827;colo
 {notice_html}
 {result_html}
 <div class="submission">
-<strong>姓名：</strong>{escape(STUDENT_NAME) if STUDENT_NAME else "（請在 app.py 的 STUDENT_NAME 填入姓名）"}
+<strong>姓名：</strong>{escape(STUDENT_NAME)}
 </div>
 </main>
 </body>
