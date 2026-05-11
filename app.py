@@ -11,6 +11,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
 SOURCE_URL = "https://lotto.hawo.tw/lotto/recent-50"
+STUDENT_NAME = ""
 
 
 @dataclass(frozen=True)
@@ -124,8 +125,6 @@ input{{flex:1;padding:.7rem .8rem;border:1px solid #d1d5db;border-radius:.35rem;
 button{{padding:.7rem 1rem;border:0;border-radius:.35rem;background:#111827;color:#fff;font:inherit;font-weight:700;cursor:pointer}}
 .notice{{padding:.75rem 1rem;border-radius:.35rem;background:#fef3c7;color:#92400e}}
 .submission{{margin-top:2rem;padding-top:1.25rem;border-top:1px solid #e5e7eb}}
-.submission label{{display:block;margin-bottom:.45rem;font-weight:700}}
-.submission input{{width:100%;box-sizing:border-box}}
 .balls{{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}}
 .ball{{border-radius:999px;padding:.65rem .9rem;background:#f97316;color:#fff;font-weight:700}}
 .special{{background:#dc2626}}
@@ -141,8 +140,7 @@ button{{padding:.7rem 1rem;border:0;border-radius:.35rem;background:#111827;colo
 {notice_html}
 {result_html}
 <div class="submission">
-<label for="student-name">姓名</label>
-<input id="student-name" name="student_name" type="text" placeholder="請輸入姓名">
+<strong>姓名：</strong>{escape(STUDENT_NAME) if STUDENT_NAME else "（請在 app.py 的 STUDENT_NAME 填入姓名）"}
 </div>
 </main>
 </body>
